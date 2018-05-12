@@ -1,0 +1,8 @@
+C:\Users\Owner\documents\visual studio 2010\Projects\HunterReborn\HunterReborn\bin\Debug\HunterReborn.exe
+C:\Users\Owner\documents\visual studio 2010\Projects\HunterReborn\HunterReborn\bin\Debug\HunterReborn.pdb
+C:\Users\Owner\documents\visual studio 2010\Projects\HunterReborn\HunterReborn\bin\Debug\HunterReborn.xml
+C:\Users\Owner\documents\visual studio 2010\Projects\HunterReborn\HunterReborn\obj\x86\Debug\HunterReborn.Resources.resources
+C:\Users\Owner\documents\visual studio 2010\Projects\HunterReborn\HunterReborn\obj\x86\Debug\HunterReborn.vbproj.GenerateResource.Cache
+C:\Users\Owner\documents\visual studio 2010\Projects\HunterReborn\HunterReborn\obj\x86\Debug\HunterReborn.exe
+C:\Users\Owner\documents\visual studio 2010\Projects\HunterReborn\HunterReborn\obj\x86\Debug\HunterReborn.xml
+C:\Users\Owner\documents\visual studio 2010\Projects\HunterReborn\HunterReborn\obj\x86\Debug\HunterReborn.pdb

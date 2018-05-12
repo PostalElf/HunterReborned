@@ -1,0 +1,7 @@
+[Goblin]
+Speed: 25
+Dodge: 10
+ShockCapacity: 100
+Bodypart: Goblin Arms
+Bodypart: Goblin Torso
+Bodypart: Goblin Legs
