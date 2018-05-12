@@ -14,6 +14,7 @@
     Public Sub Construct(ByVal header As String, ByVal entry As String)
         Select Case header
             Case "Name" : _Name = entry
+            Case "IsVital" : IsVital = CBool(entry)
             Case "Weight" : _BonusWeight = CInt(entry)
             Case "Carry" : _BonusCarry = CInt(entry)
             Case "Speed" : _BonusSpeed = CInt(entry)
@@ -32,6 +33,7 @@
         Dim total As New Queue(Of String)
         With total
             .Enqueue(Name)
+            .Enqueue("IsVital:" & IsVital.ToString)
             .Enqueue("Weight:" & BonusWeight)
             .Enqueue("Carry:" & BonusCarry)
             .Enqueue("Speed:" & BonusSpeed)
@@ -104,6 +106,7 @@
 #End Region
 
 #Region "BP Specific Properties"
+    Private IsVital As Boolean
     Private Agility As Integer
     Private Armour As Integer
     Private Health As Integer
