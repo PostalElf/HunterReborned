@@ -171,15 +171,10 @@
             'apply shock
             Dim shock As Integer = Convert.ToInt32(damage * (1 - ShockAbsorb))
             If shock <= 0 Then shock = 1
-            Owner.shock += shock
+            Owner.Shock += shock
 
             'check for bodypart destruction
-            If Health <= 0 Then
-                Dim formerOwner As Combatant = Owner
-                Owner.DestroyBodypart(Me)
-                RaiseEvent IsDestroyed(formerOwner, Me)
-                formerOwner.Shock += ShockLoss
-            End If
+            If Health <= 0 Then RaiseEvent IsDestroyed(Owner, Me)
         Else
             'attack misses
             RaiseEvent IsMissed(attacker, attack, Owner, Me)

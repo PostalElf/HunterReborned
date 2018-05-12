@@ -27,6 +27,10 @@
     End Sub
     Private Sub HandlerBodypartIsDestroyed(ByVal target As Combatant, ByVal targetBp As Bodypart)
         RaiseEvent IsBodypartDestroyed(target, targetBp)
+
+        target.Remove(targetBp)
+        If target.HasVitals = False Then RaiseEvent IsDestroyed(target) : Exit Sub
+        target.Shock += targetBp.ShockLoss
     End Sub
 #End Region
 
@@ -109,10 +113,6 @@
     Protected Sub Remove(ByVal bp As Bodypart)
         bp.Owner = Nothing
         If Bodyparts.Contains(bp) Then Bodyparts.Remove(bp)
-    End Sub
-    Public Sub DestroyBodypart(ByVal bp As Bodypart)
-        Remove(bp)
-        If HasVitals = False Then RaiseEvent IsDestroyed(Me)
     End Sub
     Public Function GetTargetableBodyparts(ByVal attack As Attack) As List(Of Bodypart)
         Return Bodyparts
