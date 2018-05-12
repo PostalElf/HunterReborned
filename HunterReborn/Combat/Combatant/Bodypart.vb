@@ -70,6 +70,11 @@
     Public Event IsMissed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
     Public Event IsHit(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart, ByVal isFullHit As Boolean)
     Public Event IsDestroyed(ByVal target As Combatant, ByVal targetBp As Bodypart)
+
+    Public Event ShieldIsHit(ByVal shield As Shield, ByVal attacker As Combatant, ByVal attack As Attack)
+    Public Event ShieldIsOverloaded(ByVal shield As Shield, ByVal overloadShock As Integer, ByVal overloadDamage As Integer)
+    Public Event ShieldIsTurnedOn(ByVal shield As Shield)
+    Public Event ShieldIsTurnedOff(ByVal shield As Shield)
 #End Region
 
 #Region "Combatant Bonuses"
@@ -114,6 +119,17 @@
     End Property
     Private Agility As Integer
     Private Armour As Integer
+
+    Private _DamageSustained As Integer
+    Private Property DamageSustained As Integer
+        Get
+            Return _DamageSustained
+        End Get
+        Set(ByVal value As Integer)
+            _DamageSustained = value
+            If _damageSustained > Health Then RaiseEvent IsDestroyed(Owner, Me)
+        End Set
+    End Property
     Private Health As Integer
     Private ShockAbsorb As Double
     Private _ShockLoss As Integer
@@ -142,6 +158,45 @@
             Return True
         End Get
     End Property
+
+    Private _Shield As Shield
+    Public Property Shield As Shield
+        Get
+            Return _Shield
+        End Get
+        Set(ByVal value As Shield)
+            _Shield = value
+            If value Is Nothing = False Then
+                _Shield.Owner = Me
+
+                AddHandler _Shield.IsHit, AddressOf HandlerShieldIsHit
+                AddHandler _Shield.IsOverloaded, AddressOf HandlerShieldIsOverloaded
+                AddHandler _Shield.IsTurnedOn, AddressOf HandlerShieldIsTurnedOn
+                AddHandler _Shield.IsTurnedOff, AddressOf HandlerShieldIsTurnedOff
+            End If
+        End Set
+    End Property
+    Public ReadOnly Property HasActiveShield As Boolean
+        Get
+            If Shield Is Nothing Then Return False
+            If Shield.IsActive = False Then Return False
+
+            Return True
+        End Get
+    End Property
+    Private Sub HandlerShieldIsHit(ByVal shield As Shield, ByVal attacker As Combatant, ByVal attack As Attack)
+        RaiseEvent ShieldIsHit(shield, attacker, attack)
+    End Sub
+    Private Sub HandlerShieldIsOverloaded(ByVal shield As Shield, ByVal overloadShock As Integer, ByVal overloadDamage As Integer)
+        Health -= overloadDamage
+        RaiseEvent ShieldIsOverloaded(shield, overloadShock, overloadDamage)
+    End Sub
+    Private Sub HandlerShieldIsTurnedOn(ByVal shield As Shield)
+        RaiseEvent ShieldIsTurnedOn(shield)
+    End Sub
+    Private Sub HandlerShieldIsTurnedOff(ByVal shield As Shield)
+        RaiseEvent ShieldIsTurnedOff(shield)
+    End Sub
 #End Region
 
     Public Sub Tick()
@@ -149,35 +204,43 @@
     End Sub
     Public Sub IsAttacked(ByVal attacker As Combatant, ByVal attack As Attack)
         Dim roll As Integer = Rng.Next(1, 101)
-        If roll <= attack.Accuracy - Owner.dodge - Agility Then
-            'attack hits; roll for penetration
-            Dim damage As Integer
-            Dim isFullHit As Boolean
-            roll = Rng.Next(1, 101)
-            If roll <= attack.Penetration - Armour Then
-                'full hit
-                damage = attack.DamageFull
-                isFullHit = True
+        If roll <= attack.Accuracy - Owner.Dodge - Agility Then
+            'attack hits; check for shield
+            If Owner.ActiveShield Is Nothing = False Then
+                'shielded; add damage to shield instead
+                Owner.ActiveShield.AbsorbAttack(attacker, attack)
             Else
-                'glancing hit
-                damage = attack.DamageGlancing
-                isFullHit = False
+                'no shield; roll for penetration
+                AttackPenetration(attacker, attack)
             End If
-
-            'apply damage
-            Health -= damage
-            RaiseEvent IsHit(attacker, attack, Owner, Me, isFullHit)
-
-            'apply shock
-            Dim shock As Integer = Convert.ToInt32(damage * (1 - ShockAbsorb - attack.ShockModifier))
-            If shock <= 0 Then shock = 1
-            Owner.Shock += shock
-
-            'check for bodypart destruction
-            If Health <= 0 Then RaiseEvent IsDestroyed(Owner, Me)
         Else
             'attack misses
             RaiseEvent IsMissed(attacker, attack, Owner, Me)
         End If
+    End Sub
+    Private Sub AttackPenetration(ByVal attacker As Combatant, ByVal attack As Attack)
+        Dim damage As Integer
+        Dim isFullHit As Boolean
+        Dim formerOwner As Combatant = Owner            'used to hold a reference to owner in the event of bodypart destruction (which causes owner = nothing)
+
+        Dim roll As Integer = Rng.Next(1, 101)
+        If roll <= Attack.Penetration - Armour Then
+            'full hit
+            damage = Attack.DamageFull
+            isFullHit = True
+        Else
+            'glancing hit
+            damage = Attack.DamageGlancing
+            isFullHit = False
+        End If
+
+        'apply damage
+        RaiseEvent IsHit(attacker, attack, formerOwner, Me, isFullHit)
+        DamageSustained += damage
+
+        'apply shock
+        Dim shock As Integer = Convert.ToInt32(damage * (1 - ShockAbsorb - Attack.ShockModifier))
+        If shock <= 0 Then shock = 1
+        formerOwner.Shock += shock
     End Sub
 End Class

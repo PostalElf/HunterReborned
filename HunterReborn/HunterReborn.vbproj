@@ -76,6 +76,7 @@
     <Compile Include="Combat\Combatant\Combatant.vb" />
     <Compile Include="Combat\Combatant\CombatantAI.vb" />
     <Compile Include="Combat\Combatant\CombatantPlayer.vb" />
+    <Compile Include="Combat\Combatant\Shield.vb" />
     <Compile Include="Combat\eDamageType.vb" />
     <Compile Include="Combat\ePosition.vb" />
     <Compile Include="Dev\Common.vb" />

@@ -32,6 +32,41 @@
         If target.HasVitals = False Then RaiseEvent IsDestroyed(target) : Exit Sub
         target.Shock += targetBp.ShockLoss
     End Sub
+
+    Public Event ShieldIsHit(ByVal shield As Shield, ByVal attacker As Combatant, ByVal attack As Attack)
+    Public Event ShieldIsOverloaded(ByVal shield As Shield, ByVal overloadShock As Integer, ByVal overloadDamage As Integer)
+    Public Event ShieldIsTurnedOn(ByVal shield As Shield)
+    Public Event ShieldIsTurnedOff(ByVal shield As Shield)
+
+    Private Sub HandlerShieldIsHit(ByVal shield As Shield, ByVal attacker As Combatant, ByVal attack As Attack)
+        RaiseEvent ShieldIsHit(shield, attacker, attack)
+    End Sub
+    Private Sub HandlerShieldIsOverloaded(ByVal shield As Shield, ByVal overloadShock As Integer, ByVal overloadDamage As Integer)
+        Shock += overloadShock
+        RaiseEvent ShieldIsOverloaded(shield, overloadShock, overloadDamage)
+    End Sub
+    Private Sub HandlerShieldIsTurnedOn(ByVal shield As Shield)
+        'hook up events
+        AddHandler shield.IsHit, AddressOf HandlerShieldIsHit
+        AddHandler shield.IsOverloaded, AddressOf HandlerShieldIsOverloaded
+        AddHandler shield.IsTurnedOn, AddressOf HandlerShieldIsTurnedOn
+        AddHandler shield.IsTurnedOff, AddressOf HandlerShieldIsTurnedOff
+        RaiseEvent ShieldIsTurnedOn(shield)
+
+        'only one shield can be active at any time
+        'turn off each shield that isn't the shield that just got turned on
+        If BaseBodypart.Shield Is Nothing AndAlso BaseBodypart.Shield.Equals(shield) = False Then BaseBodypart.Shield.IsActive = False
+        For Each bp In Bodyparts
+            If bp.Shield Is Nothing AndAlso bp.Shield.Equals(shield) = False Then bp.Shield.IsActive = False
+        Next
+    End Sub
+    Private Sub HandlerShieldIsTurnedOff(ByVal shield As Shield)
+        RemoveHandler shield.IsHit, AddressOf HandlerShieldIsHit
+        RemoveHandler shield.IsOverloaded, AddressOf HandlerShieldIsOverloaded
+        RemoveHandler shield.IsTurnedOn, AddressOf HandlerShieldIsTurnedOn
+        RemoveHandler shield.IsTurnedOff, AddressOf HandlerShieldIsTurnedOff
+        RaiseEvent ShieldIsTurnedOff(shield)
+    End Sub
 #End Region
 
 #Region "Battlefield"
@@ -68,6 +103,15 @@
                 RaiseEvent IsDestroyed(Me)
             End If
         End Set
+    End Property
+    Public ReadOnly Property ActiveShield As Shield
+        Get
+            If BaseBodypart.HasActiveShield = True Then Return BaseBodypart.Shield
+            For Each bp In Bodyparts
+                If bp.hasactiveshield = True Then Return bp.Shield
+            Next
+            Return Nothing
+        End Get
     End Property
 
     Public MustOverride Function Tick() As Boolean
@@ -157,6 +201,9 @@
     End Property
     Private ReadOnly Property Encumbrance As Double
         Get
+            If Weight = 0 Then Return 1
+            If Carry = 0 Then Return 0
+
             Dim absEncumbrance As Integer = Math.Ceiling(Weight / Carry * 100)
             Select Case absEncumbrance
                 Case Is < 50 : Return 1
