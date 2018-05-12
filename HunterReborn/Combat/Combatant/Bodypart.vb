@@ -70,11 +70,6 @@
     Public Event IsMissed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
     Public Event IsHit(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart, ByVal isFullHit As Boolean)
     Public Event IsDestroyed(ByVal target As Combatant, ByVal targetBp As Bodypart)
-
-    Public Event ShieldIsHit(ByVal shield As Shield, ByVal attacker As Combatant, ByVal attack As Attack)
-    Public Event ShieldIsOverloaded(ByVal shield As Shield, ByVal overloadShock As Integer, ByVal overloadDamage As Integer)
-    Public Event ShieldIsTurnedOn(ByVal shield As Shield)
-    Public Event ShieldIsTurnedOff(ByVal shield As Shield)
 #End Region
 
 #Region "Combatant Bonuses"
@@ -167,12 +162,11 @@
         Set(ByVal value As Shield)
             _Shield = value
             If value Is Nothing = False Then
-                _Shield.Owner = Me
-
-                AddHandler _Shield.IsHit, AddressOf HandlerShieldIsHit
-                AddHandler _Shield.IsOverloaded, AddressOf HandlerShieldIsOverloaded
-                AddHandler _Shield.IsTurnedOn, AddressOf HandlerShieldIsTurnedOn
-                AddHandler _Shield.IsTurnedOff, AddressOf HandlerShieldIsTurnedOff
+                With _Shield
+                    .Owner = Me
+                    AddHandler .IsTurnedOn, AddressOf Owner.ShieldTurnedOn
+                    AddHandler .IsTurnedOff, AddressOf Owner.shieldTurnedOff
+                End With
             End If
         End Set
     End Property
@@ -184,19 +178,6 @@
             Return True
         End Get
     End Property
-    Private Sub HandlerShieldIsHit(ByVal shield As Shield, ByVal attacker As Combatant, ByVal attack As Attack)
-        RaiseEvent ShieldIsHit(shield, attacker, attack)
-    End Sub
-    Private Sub HandlerShieldIsOverloaded(ByVal shield As Shield, ByVal overloadShock As Integer, ByVal overloadDamage As Integer)
-        Health -= overloadDamage
-        RaiseEvent ShieldIsOverloaded(shield, overloadShock, overloadDamage)
-    End Sub
-    Private Sub HandlerShieldIsTurnedOn(ByVal shield As Shield)
-        RaiseEvent ShieldIsTurnedOn(shield)
-    End Sub
-    Private Sub HandlerShieldIsTurnedOff(ByVal shield As Shield)
-        RaiseEvent ShieldIsTurnedOff(shield)
-    End Sub
 #End Region
 
     Public Sub Tick()
