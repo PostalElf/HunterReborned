@@ -90,7 +90,15 @@
 #Region "Bodyparts"
     Protected BaseBodypart As Bodypart
     Protected Bodyparts As New List(Of Bodypart)
-    Public Sub Add(ByVal bp As Bodypart)
+    Public ReadOnly Property HasVitals As Boolean
+        Get
+            For Each bp In Bodyparts
+                If bp.isvital = True Then Return True
+            Next
+            Return False
+        End Get
+    End Property
+    Protected Sub Add(ByVal bp As Bodypart)
         bp.Owner = Me
         Bodyparts.Add(bp)
 
@@ -98,9 +106,13 @@
         AddHandler bp.IsHit, AddressOf HandlerBodypartIsHit
         AddHandler bp.IsDestroyed, AddressOf HandlerBodypartIsDestroyed
     End Sub
-    Public Sub Remove(ByVal bp As Bodypart)
+    Protected Sub Remove(ByVal bp As Bodypart)
         bp.Owner = Nothing
         If Bodyparts.Contains(bp) Then Bodyparts.Remove(bp)
+    End Sub
+    Public Sub DestroyBodypart(ByVal bp As Bodypart)
+        Remove(bp)
+        If HasVitals = False Then RaiseEvent IsDestroyed(Me)
     End Sub
     Public Function GetTargetableBodyparts(ByVal attack As Attack) As List(Of Bodypart)
         Return Bodyparts
