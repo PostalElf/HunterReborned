@@ -13,6 +13,7 @@
             .Cooldown = Convert.ToInt32(ln(c.N))
             .Accuracy = Convert.ToInt32(ln(c.N))
             .Penetration = Convert.ToInt32(ln(c.N))
+            .ShockModifier = Convert.ToDouble(ln(c.N))
             .DamageType = Convert.ToInt32(ln(c.N))
             .DamageFull = Convert.ToInt32(ln(c.N))
             .DamageGlancing = Convert.ToInt32(ln(c.N))
@@ -28,6 +29,7 @@
         total &= Cooldown & "|"
         total &= Accuracy & "|"
         total &= Penetration & "|"
+        total &= ShockModifier & "|"
         total &= DamageType & "|"
         total &= DamageFull & "|"
         total &= DamageGlancing
@@ -51,6 +53,7 @@
     Public Cooldown As Integer
     Public Accuracy As Integer
     Public Penetration As Integer
+    Public ShockModifier As Double
 
     Public DamageType As eDamageType
     Public DamageFull As Integer

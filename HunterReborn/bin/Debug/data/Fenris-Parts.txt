@@ -20,7 +20,7 @@ ShockAbsorb:0
 
 ShockLoss:10
 
-Attack:Claws|0|0|3|1|90|45|0|15|10
+Attack:Claws|0|0|3|1|90|45|1|0|15|10
 
 
 
@@ -33,3 +33,4 @@ Armour:5
 Health:10
 
 ShockLoss:100
+IsVital:True

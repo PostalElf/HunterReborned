@@ -169,7 +169,7 @@
             RaiseEvent IsHit(attacker, attack, Owner, Me, isFullHit)
 
             'apply shock
-            Dim shock As Integer = Convert.ToInt32(damage * (1 - ShockAbsorb))
+            Dim shock As Integer = Convert.ToInt32(damage * (1 - ShockAbsorb - attack.ShockModifier))
             If shock <= 0 Then shock = 1
             Owner.Shock += shock
 
