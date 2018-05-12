@@ -137,12 +137,47 @@
         End Get
     End Property
 
+    Public ReadOnly Property Weight As Integer
+        Get
+            Dim total As Integer = BaseBodypart.BonusWeight
+            For Each bp In Bodyparts
+                total += bp.BonusWeight
+            Next
+            Return total
+        End Get
+    End Property
+    Public ReadOnly Property Carry As Integer
+        Get
+            Dim total As Integer = BaseBodypart.BonusCarry
+            For Each bp In Bodyparts
+                total += bp.BonusCarry
+            Next
+            Return total
+        End Get
+    End Property
+    Private ReadOnly Property Encumbrance As Double
+        Get
+            Dim absEncumbrance As Integer = Math.Ceiling(Weight / Carry * 100)
+            Select Case absEncumbrance
+                Case Is < 50 : Return 1
+                Case 51 To 70 : Return 0.75
+                Case 71 To 85 : Return 0.5
+                Case 86 To 100 : Return 0.25
+                Case Else : Return 0.1
+            End Select
+        End Get
+    End Property
     Public ReadOnly Property Speed As Integer
         Get
             Dim total As Integer = BaseBodypart.BonusSpeed
             For Each bp In Bodyparts
                 total += bp.BonusSpeed
             Next
+
+            'apply encumbrance
+            total = Math.Ceiling(total * Encumbrance)
+            If total <= 0 Then total = 1
+
             Return total
         End Get
     End Property
