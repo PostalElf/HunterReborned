@@ -5,6 +5,7 @@
         battlefield.Add(CombatantPlayer.Construct("Fenris"))
         battlefield.Add(CombatantAI.Construct("Goblin"))
         battlefield.Main()
+        Console.ReadLine()
     End Sub
     Private Function BuildMech() As CombatantPlayer
         Dim mechBaseBPRaw As New Queue(Of String)

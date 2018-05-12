@@ -1,11 +1,4 @@
 ﻿Public Class Battlefield
-    Public Sub New()
-        For Each ePosition In [Enum].GetValues(GetType(ePosition))
-            Attackers.Add(ePosition, New List(Of Combatant))
-            Defenders.Add(ePosition, New List(Of Combatant))
-        Next
-    End Sub
-
 #Region "Reports"
     Private TurnNumber As Integer = 1
     Private Reports As New Queue(Of BattlefieldReport)
@@ -20,37 +13,17 @@
 #End Region
 
 #Region "Combatants"
-    Private Attackers As New Dictionary(Of ePosition, List(Of Combatant))
-    Private Defenders As New Dictionary(Of ePosition, List(Of Combatant))
-    Private ReadOnly Property GetCombatantList(ByVal combatant As Combatant, Optional ByVal position As ePosition = -1) As List(Of Combatant)
+    Private Attackers As New List(Of Combatant)
+    Private Defenders As New List(Of Combatant)
+    Private ReadOnly Property GetCombatantList(ByVal combatant As Combatant) As List(Of Combatant)
         Get
-            If position = -1 Then position = combatant.BattlefieldPosition
-
             If TypeOf combatant Is CombatantAI Then
-                Return Defenders(position)
+                Return Defenders
             ElseIf TypeOf combatant Is CombatantPlayer Then
-                Return Attackers(position)
+                Return Attackers
             Else
                 Throw New Exception("Unknown Combatant type.")
             End If
-        End Get
-    End Property
-    Private ReadOnly Property AttackersAll As List(Of Combatant)
-        Get
-            Dim total As New List(Of Combatant)
-            For Each pos In [Enum].GetValues(GetType(ePosition))
-                total.AddRange(Attackers(pos))
-            Next
-            Return total
-        End Get
-    End Property
-    Private ReadOnly Property DefendersAll As List(Of Combatant)
-        Get
-            Dim total As New List(Of Combatant)
-            For Each pos In [Enum].GetValues(GetType(ePosition))
-                total.AddRange(Defenders(pos))
-            Next
-            Return total
         End Get
     End Property
     Public Sub Add(ByVal combatant As Combatant)
@@ -66,8 +39,8 @@
         AddHandler combatant.IsBodypartDestroyed, AddressOf HandlerBodypartDestroyed
     End Sub
     Public Function Contains(ByVal combatant As Combatant)
-        If AttackersAll.Contains(combatant) Then Return True
-        If DefendersAll.Contains(combatant) Then Return True
+        If Attackers.Contains(combatant) Then Return True
+        If Defenders.Contains(combatant) Then Return True
         Return False
     End Function
 
@@ -75,13 +48,13 @@
         Dim highestSpeed As Integer = -1
         Dim highestSpeedCombatant As Combatant = Nothing
 
-        For Each c In AttackersAll
+        For Each c In Attackers
             If c.Speed > highestSpeed Then
                 highestSpeedCombatant = c
                 highestSpeed = c.Speed
             End If
         Next
-        For Each c In DefendersAll
+        For Each c In Defenders
             If c.Speed > highestSpeed Then
                 highestSpeedCombatant = c
                 highestSpeed = c.Speed
@@ -91,11 +64,6 @@
     End Function
 
     Private Sub HandlerMove(ByVal combatant As Combatant, ByVal currentPosition As ePosition, ByVal targetPosition As ePosition)
-        Dim targetList As List(Of Combatant) = GetCombatantList(combatant, currentPosition)
-        Dim newTargetList As List(Of Combatant) = GetCombatantList(combatant, targetPosition)
-        targetList.Remove(combatant)
-        newTargetList.Add(combatant)
-
         AddReport(combatant.Name & " moves from " & currentPosition.ToString & " to " & targetPosition.ToString & ".")
     End Sub
     Private Sub HandlerShocked(ByVal combatant As Combatant, ByVal value As Integer)
@@ -122,12 +90,12 @@
     Public Sub Main()
         While True
             Dim hasActed As Boolean = False
-            For n = AttackersAll.Count - 1 To 0 Step -1
-                Dim c As Combatant = AttackersAll(n)
+            For n = Attackers.Count - 1 To 0 Step -1
+                Dim c As Combatant = Attackers(n)
                 If c.Tick() = True Then hasActed = True
             Next
-            For n = DefendersAll.Count - 1 To 0 Step -1
-                Dim c As Combatant = DefendersAll(n)
+            For n = Defenders.Count - 1 To 0 Step -1
+                Dim c As Combatant = Defenders(n)
                 If c.Tick() = True Then hasActed = True
             Next
 
@@ -136,11 +104,11 @@
                 TurnNumber += 1
 
                 'check if either side has won
-                If AttackersAll.Count = 0 Then
+                If Attackers.Count = 0 Then
                     'defenders win
                     AddReport("The defenders have won!")
                     Exit While
-                ElseIf DefendersAll.Count = 0 Then
+                ElseIf Defenders.Count = 0 Then
                     'attackers win
                     AddReport("The attackers have won!")
                     Exit While
@@ -150,30 +118,18 @@
     End Sub
     Public Function GetTargets(ByVal attacker As Combatant) As List(Of Combatant)
         If TypeOf attacker Is CombatantAI Then
-            Return AttackersAll
+            Return Attackers
         ElseIf TypeOf attacker Is CombatantPlayer Then
-            Return DefendersAll
+            Return Defenders
         Else
             Throw New Exception("Unrecognised combatant type")
         End If
     End Function
     Public Function GetTargetsWithinRange(ByVal attacker As Combatant, ByVal attack As Attack) As List(Of Combatant)
-        Dim minRange As Integer = attacker.BattlefieldPosition + attack.MinRange
-        If minRange < 0 Then minRange = 0
-        If minRange > ePosition.Back Then minRange = ePosition.Back
-        Dim maxRange As Integer = attacker.BattlefieldPosition + attack.MaxRange
-        If maxRange < 0 Then maxRange = 0
-        If maxRange > ePosition.Back Then maxRange = ePosition.Back
-
         Dim total As New List(Of Combatant)
-        For n = minRange To maxRange
-            If TypeOf attacker Is CombatantAI Then
-                total.AddRange(Attackers(n))
-            ElseIf TypeOf attacker Is CombatantPlayer Then
-                total.AddRange(Defenders(n))
-            Else
-                Throw New Exception("Unrecognised combatant type")
-            End If
+        For Each target In GetTargets(attacker)
+            Dim distance As Integer = target.BattlefieldPosition + attacker.BattlefieldPosition
+            If distance >= attack.MinRange AndAlso distance <= attack.MaxRange Then total.Add(target)
         Next
         Return total
     End Function
