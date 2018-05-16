@@ -12,33 +12,18 @@
 #End Region
 
 #Region "Events"
-    Public Event IsBodypartMissed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
-    Public Event IsBodypartHit(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart, ByVal isFullHit As Boolean)
-    Public Event IsBodypartDestroyed(ByVal target As Combatant, ByVal targetBp As Bodypart)
     Public Event IsMoved(ByVal combatant As Combatant, ByVal currentPosition As ePosition, ByVal targetPosition As ePosition)
     Public Event IsShocked(ByVal target As Combatant, ByVal value As Integer)
     Public Event IsDestroyed(ByVal combatant As Combatant)
 
-    Private Sub HandlerBodypartIsMissed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
-        RaiseEvent IsBodypartMissed(attacker, attack, target, targetBp)
-    End Sub
-    Private Sub HandlerBodypartIsHit(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart, ByVal isFullHit As Boolean)
-        RaiseEvent IsBodypartHit(attacker, attack, target, targetBp, True)
-    End Sub
-    Private Sub HandlerBodypartIsDestroyed(ByVal target As Combatant, ByVal targetBp As Bodypart)
-        RaiseEvent IsBodypartDestroyed(target, targetBp)
+    Private Sub HandlerShieldOverloaded(ByVal shield As Shield, ByVal overloadShock As Integer, ByVal overloadDamage As Integer)
+        If shield.Equals(ActiveShield) = False Then Exit Sub
 
-        target.Remove(targetBp)
-        If target.HasVitals = False Then RaiseEvent IsDestroyed(target) : Exit Sub
-        target.Shock += targetBp.ShockLoss
+        Shock += overloadShock
     End Sub
-    Public Sub ShieldTurnedOn(ByVal shield As Shield)
-        If BaseBodypart.Shield Is Nothing = False AndAlso BaseBodypart.Shield.Equals(shield) = False Then BaseBodypart.Shield.IsActive = False
-        For Each bp In Bodyparts
-            If bp.Shield Is Nothing = False AndAlso bp.Shield.Equals(shield) = False Then bp.Shield.IsActive = False
-        Next
-    End Sub
-    Public Sub ShieldTurnedOff(ByVal shield As Shield)
+    Private Sub HandlerShieldHit(ByVal shield As Shield, ByVal attacker As Combatant, ByVal attack As Attack)
+        If shield.Equals(ActiveShield) = False Then Exit Sub
+
 
     End Sub
 #End Region
@@ -111,7 +96,7 @@
 
 #Region "Bodyparts"
     Protected BaseBodypart As Bodypart
-    Protected Bodyparts As New List(Of Bodypart)
+    Public Bodyparts As New List(Of Bodypart)
     Public ReadOnly Property HasVitals As Boolean
         Get
             For Each bp In Bodyparts
@@ -124,17 +109,17 @@
         bp.Owner = Me
         Bodyparts.Add(bp)
 
-        AddHandler bp.IsMissed, AddressOf HandlerBodypartIsMissed
-        AddHandler bp.IsHit, AddressOf HandlerBodypartIsHit
-        AddHandler bp.IsDestroyed, AddressOf HandlerBodypartIsDestroyed
+        If bp.Shield Is Nothing = False Then
+            With bp.Shield
+                AddHandler .IsOverloaded, AddressOf HandlerShieldOverloaded
+                AddHandler .IsHit, AddressOf HandlerShieldHit
+            End With
+        End If
     End Sub
     Protected Sub Remove(ByVal bp As Bodypart)
         bp.Owner = Nothing
         If Bodyparts.Contains(bp) Then Bodyparts.Remove(bp)
     End Sub
-    Public Function GetTargetableBodyparts(ByVal attack As Attack) As List(Of Bodypart)
-        Return Bodyparts
-    End Function
     Public ReadOnly Property AttacksAll As List(Of Attack)
         Get
             Dim total As New List(Of Attack)

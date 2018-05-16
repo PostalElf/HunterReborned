@@ -33,12 +33,22 @@
         GetCombatantList(combatant).Add(combatant)
         combatant.BattlefieldSetup()
 
-        AddHandler combatant.IsMoved, AddressOf HandlerMove
-        AddHandler combatant.IsShocked, AddressOf HandlerShocked
-        AddHandler combatant.IsDestroyed, AddressOf HandlerDestroyed
-        AddHandler combatant.IsBodypartMissed, AddressOf HandlerMissed
-        AddHandler combatant.IsBodypartHit, AddressOf HandlerHit
-        AddHandler combatant.IsBodypartDestroyed, AddressOf HandlerBodypartDestroyed
+        AddHandler combatant.IsMoved, AddressOf HandlerCombatantMove
+        AddHandler combatant.IsShocked, AddressOf HandlerCombatantShocked
+        AddHandler combatant.IsDestroyed, AddressOf HandlerCombatantDestroyed
+
+        For Each bp In combatant.bodyparts
+            AddHandler bp.IsMissed, AddressOf HandlerBodypartMissed
+            AddHandler bp.IsHit, AddressOf HandlerBodypartHit
+            AddHandler bp.IsDestroyed, AddressOf HandlerBodypartDestroyed
+
+            If bp.Shield Is Nothing = False Then
+                AddHandler bp.Shield.IsTurnedOn, AddressOf HandlerShieldTurnedOn
+                AddHandler bp.Shield.IsTurnedOff, AddressOf HandlerShieldTurnedOff
+                AddHandler bp.Shield.IsHit, AddressOf HandlerShieldHit
+                AddHandler bp.Shield.IsOverloaded, AddressOf HandlerShieldOverloaded
+            End If
+        Next
     End Sub
     Public Function Contains(ByVal combatant As Combatant)
         If Attackers.Contains(combatant) Then Return True
@@ -65,28 +75,40 @@
         Return highestSpeed
     End Function
 
-    Private Sub HandlerMove(ByVal combatant As Combatant, ByVal currentPosition As ePosition, ByVal targetPosition As ePosition)
+    Private Sub HandlerCombatantMove(ByVal combatant As Combatant, ByVal currentPosition As ePosition, ByVal targetPosition As ePosition)
         AddReport(combatant.Name & " moves from " & currentPosition.ToString & " to " & targetPosition.ToString & ".", ConsoleColor.DarkGray)
     End Sub
-    Private Sub HandlerShocked(ByVal combatant As Combatant, ByVal value As Integer)
+    Private Sub HandlerCombatantShocked(ByVal combatant As Combatant, ByVal value As Integer)
         AddReport(combatant.Name & " suffers " & value & " shock.", ConsoleColor.White)
     End Sub
-    Private Sub HandlerDestroyed(ByVal combatant As Combatant)
+    Private Sub HandlerCombatantDestroyed(ByVal combatant As Combatant)
         Dim targetList = GetCombatantList(combatant)
         targetList.Remove(combatant)
 
         AddReport(combatant.Name & " has been destroyed!!!", ConsoleColor.DarkRed)
     End Sub
-    Private Sub HandlerMissed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
+    Private Sub HandlerBodypartMissed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
         AddReport(attacker.Name & " missed " & target.Name & "'s " & targetBp.Name & " with " & attack.Name & ".", ConsoleColor.DarkGray)
     End Sub
-    Private Sub HandlerHit(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart, ByVal isFullHit As Boolean)
+    Private Sub HandlerBodypartHit(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart, ByVal isFullHit As Boolean)
         Dim damage As Integer
         If isFullHit = True Then damage = attack.DamageFull Else damage = attack.DamageGlancing
         AddReport(attacker.Name & " hit " & target.Name & "'s " & targetBp.Name & " with " & attack.Name & " for " & damage & " " & attack.DamageType.ToString & "!", ConsoleColor.Gray)
     End Sub
     Private Sub HandlerBodypartDestroyed(ByVal target As Combatant, ByVal targetBp As Bodypart)
         AddReport(target.Name & "'s " & targetBp.Name & " is destroyed!!!", ConsoleColor.DarkRed)
+    End Sub
+    Private Sub HandlerShieldTurnedOn(ByVal shield As Shield)
+        AddReport(shield.Owner.Name & " turned on its shield.", ConsoleColor.DarkGreen)
+    End Sub
+    Private Sub HandlerShieldTurnedOff(ByVal shield As Shield)
+        AddReport(shield.Owner.Name & " turned off its shield.", ConsoleColor.DarkGreen)
+    End Sub
+    Private Sub HandlerShieldHit(ByVal shield As Shield, ByVal attacker As Combatant, ByVal attack As Attack)
+
+    End Sub
+    Private Sub HandlerShieldOverloaded(ByVal shield As Shield, ByVal overloadShock As Integer, ByVal overloadDamage As Integer)
+
     End Sub
 #End Region
 

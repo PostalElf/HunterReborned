@@ -56,7 +56,7 @@
             Dim distance As Integer = CurrentTarget.BattlefieldPosition + BattlefieldPosition
             If distance >= CurrentAttack.MinRange AndAlso distance <= CurrentAttack.MaxRange Then
                 'target in range; attack
-                Dim targetBodypart As Bodypart = GetRandom(CurrentTarget.GetTargetableBodyparts(CurrentAttack))
+                Dim targetBodypart As Bodypart = GetRandom(CurrentTarget.Bodyparts)
                 targetBodypart.IsAttacked(Me, CurrentAttack)
             Else
                 'target out of range; move

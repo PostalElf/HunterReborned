@@ -70,6 +70,10 @@
     Public Event IsMissed(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart)
     Public Event IsHit(ByVal attacker As Combatant, ByVal attack As Attack, ByVal target As Combatant, ByVal targetBp As Bodypart, ByVal isFullHit As Boolean)
     Public Event IsDestroyed(ByVal target As Combatant, ByVal targetBp As Bodypart)
+
+    Private Sub HandlerShieldOverloaded(ByVal shield As Shield, ByVal overloadShock As Integer, ByVal overloadDamage As Integer)
+        DamageSustained += overloadDamage
+    End Sub
 #End Region
 
 #Region "Combatant Bonuses"
@@ -160,13 +164,12 @@
             Return _Shield
         End Get
         Set(ByVal value As Shield)
-            _Shield = value
             If value Is Nothing = False Then
-                With _Shield
-                    .Owner = Me
-                    AddHandler .IsTurnedOn, AddressOf Owner.ShieldTurnedOn
-                    AddHandler .IsTurnedOff, AddressOf Owner.shieldTurnedOff
-                End With
+                _Shield = value
+                AddHandler _Shield.IsOverloaded, AddressOf HandlerShieldOverloaded
+            Else
+                RemoveHandler _Shield.IsOverloaded, AddressOf HandlerShieldOverloaded
+                _Shield = value
             End If
         End Set
     End Property

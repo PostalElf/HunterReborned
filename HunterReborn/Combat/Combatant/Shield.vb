@@ -31,8 +31,10 @@
             Return _IsActive
         End Get
         Set(ByVal value As Boolean)
+            'if shield property doesn't change then no need to raise events
             If value = _IsActive Then Exit Property
 
+            'otherwise, set and raise events
             _IsActive = value
             If value = True Then
                 RaiseEvent IsTurnedOn(Me)
